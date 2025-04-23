@@ -1,63 +1,109 @@
-import React, { useState } from 'react';
+// d:\Canhan\Spring_ReactApp\project\React\my-movie-app\src\components\ListMovie.jsx
+import React from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import Slider from 'react-slick';
-import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-const ListMovie = () => {
-  const [activeTab, setActiveTab] = useState('trending');
+// Nhận prop 'movies' thay vì 'data' (hoặc bạn có thể giữ 'data' nếu muốn)
+const ListMovie = ({ movies }) => {
 
-  const renderMovies = (category) => {
-    const movies = {
-      trending: [
-        { title: 'When Life Gives You Tangerines', image: 'image1.jpg' },
-        { title: '404', image: 'image2.jpg' },
-        { title: '3MAI', image: 'image3.jpg' },
-        { title: 'The Trauma Code', image: 'image4.jpg' },
-        { title: 'Karma', image: 'image5.jpg' },
-        { title: 'Another Movie', image: 'image6.jpg' },
-      ],
-      list: ['Movie 7', 'Movie 8', 'Movie 9', 'Movie 10', 'Movie 11', 'Movie 12'],
-      new: ['Movie 13', 'Movie 14', 'Movie 15', 'Movie 16', 'Movie 17', 'Movie 18'],
-    };
-
-    return movies[category].map((movie, index) => (
-      <div key={index} className='p-2'>
-        <div className='bg-gray-800 rounded overflow-hidden'>
-          <img src={movie.image} alt={movie.title} className='w-full' />
-          <div className='p-2 text-white'>
-            <h3 className='text-lg'>{movie.title}</h3>
-          </div>
-        </div>
-      </div>
-    ));
-  };
-
+  // Cấu hình cơ bản cho slider
   const settings = {
-    dots: true,
-    infinite: true,
+    dots: false, // Ẩn dots nếu không cần
+    infinite: movies.length > 4, // Chỉ infinite nếu có đủ phim để cuộn vô hạn
     speed: 500,
-    slidesToShow: 4,
+    slidesToShow: 5, // Tăng số lượng hiển thị nếu muốn
     slidesToScroll: 1,
+    autoplay: true,        // Tự động chạy
+    autoplaySpeed: 3000,   // Tốc độ tự động chạy (3 giây)
+    pauseOnHover: true,    // Tạm dừng khi hover chuột
+    responsive: [ // Cấu hình responsive cho các kích thước màn hình khác nhau
+      {
+        breakpoint: 1024, // lg
+        settings: {
+          slidesToShow: 4,
+          infinite: movies.length > 4,
+        }
+      },
+      {
+        breakpoint: 768, // md
+        settings: {
+          slidesToShow: 3,
+          infinite: movies.length > 3,
+        }
+      },
+      {
+        breakpoint: 640, // sm
+        settings: {
+          slidesToShow: 2,
+          infinite: movies.length > 2,
+        }
+      }
+    ]
   };
+
+  // Xử lý trường hợp đang tải hoặc không có phim
+  if (!movies || movies.length === 0) {
+    // Có thể hiển thị một thông báo loading hoặc trả về null
+    return <div className='bg-slate-800 p-4 text-white text-center'>Đang tải danh sách phim...</div>;
+  }
+
+  // Base URL cho ảnh từ TMDB (nên lấy kích thước phù hợp, ví dụ w500)
+  const imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
 
   return (
     <div className='bg-slate-800 p-4 text-white'>
-      <div className='flex space-x-4 mb-4'>
-        <button onClick={() => setActiveTab('trending')} className={`px-4 py-2 ${activeTab === 'trending' ? 'bg-red-500' : 'bg-gray-700'} rounded`}>
-          Trending
-        </button>
-        <button onClick={() => setActiveTab('list')} className={`px-4 py-2 ${activeTab === 'list' ? 'bg-red-500' : 'bg-gray-700'} rounded`}>
-          Danh sách
-        </button>
-        <button onClick={() => setActiveTab('new')} className={`px-4 py-2 ${activeTab === 'new' ? 'bg-red-500' : 'bg-gray-700'} rounded`}>
-          Mới cập nhật
-        </button>
-      </div>
+      {/* Xóa các nút tab vì chúng ta chỉ hiển thị một danh sách */}
+      <h2 className="text-2xl font-bold mb-4">Phim Phổ Biến</h2> {/* Thêm tiêu đề cho danh sách */}
       <Slider {...settings}>
-        {renderMovies(activeTab)}
+        {/* Lặp qua mảng 'movies' nhận được từ props */}
+        {movies.map((movie) => (
+          // Sử dụng movie.id làm key vì nó là duy nhất
+          <div key={movie.id} className='p-2 outline-none focus:outline-none'>
+            <div className='bg-gray-900 rounded overflow-hidden shadow-lg transform transition-transform duration-300 hover:scale-105 cursor-pointer'>
+              {/* Kiểm tra xem poster_path có tồn tại không */}
+              {movie.poster_path ? (
+                <img
+                  src={`${imageBaseUrl}${movie.poster_path}`}
+                  alt={movie.title}
+                  className='w-full h-auto object-cover' // Đảm bảo ảnh hiển thị đúng tỷ lệ
+                />
+              ) : (
+                // Placeholder nếu không có ảnh
+                <div className="w-full h-[300px] bg-gray-700 flex items-center justify-center text-gray-400">
+                  No Image
+                </div>
+              )}
+              <div className='p-3'>
+                {/* Sử dụng movie.title */}
+                <h3 className='text-md font-semibold truncate' title={movie.title}>{movie.title}</h3>
+                 {/* Có thể thêm thông tin khác như điểm đánh giá */}
+                 <p className="text-sm text-gray-400">Đánh giá: {movie.vote_average.toFixed(1)}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </Slider>
     </div>
   );
 };
+
+// Định nghĩa PropTypes để kiểm tra kiểu dữ liệu của prop 'movies'
+ListMovie.propTypes = {
+  movies: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    poster_path: PropTypes.string, // poster_path có thể null
+    vote_average: PropTypes.number,
+    // Thêm các prop khác bạn muốn sử dụng nếu cần
+  }))
+};
+
+// Cung cấp giá trị mặc định phòng trường hợp prop không được truyền xuống
+ListMovie.defaultProps = {
+  movies: [],
+};
+
 
 export default ListMovie;
